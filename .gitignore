@@ -1,0 +1,6 @@
+*.py
+*.pyc
+
+WellPoint*
+BCBS_MN*
+Nasco*
