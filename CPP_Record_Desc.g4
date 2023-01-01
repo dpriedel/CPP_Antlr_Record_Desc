@@ -9,51 +9,15 @@
  
 grammar CPP_Record_Desc ;
 
-options {
-    language=Cpp;
-}
-
-/* tokens { */
-/*     COMMA = ',' ; */
-/*     TAB =   '\t'; */
-/*     SPACE = ' '; */
-/*     COLON = ':'; */
-/*     DASH = '-'; */
+/* options { */
+/*     language=Cpp; */
 /* } */
-
-@header {
-import PY_Record_Field 
-}
 
 /*------------------------------------------------------------------
  * PARSER RULES
  *------------------------------------------------------------------*/
 
-record_desc /* returns[aRecordDesc]
-scope {
-    theRecord;
-    recordType;
-    useFieldNames;
-    lengthDataType;
-    needStart;
-    needEnd;
-    needLength;
-    tagged_field_count;
-}
-@init {
-    $record_desc::theRecord = None;
-    $record_desc::recordType = None;
-    $record_desc::useFieldNames = None;
-    $record_desc::lengthDataType = None;
-    $record_desc::needStart = False;
-    $record_desc::needEnd = False;
-    $record_desc::needLength = False;
-    $record_desc::tagged_field_count = 0;
-}
-@after {
-    $aRecordDesc = $record_desc::theRecord;
-} */
-            :   (fixed_record
+record_desc :   (fixed_record
                 | variable_record
                 | fixed_tagged_record
                 | union_record)
@@ -61,10 +25,7 @@ scope {
                 ;
 
 fixed_record :  FIXED_RECORD
-                NEWLINE /*{
-                    $record_desc::theRecord = PY_Record_Field.CFixedRecord();
-                    $record_desc::recordType = "Fixed" ;
-                } */
+                NEWLINE 
                 field_names_used
                 NEWLINE
                 fixed_header
@@ -72,50 +33,35 @@ fixed_record :  FIXED_RECORD
                 ;
 
 variable_record :   VARIABLE_RECORD
-                    NEWLINE /* {
-                        $record_desc::theRecord = PY_Record_Field.CFixedRecord();
-                        $record_desc::recordType = "Variable" ;
-                    } */
+                    NEWLINE
                     variable_header
                     ;
                     
 fixed_tagged_record :   FIXED_TAGGED_RECORD
-                        NEWLINE /* {
-                            $record_desc::theRecord = PY_Record_Field.CFixedTaggedRecord();
-                            $record_desc::recordType = "Fixed";     #  just for processing the fixed fields part
-                        } */
+                        NEWLINE
                         field_names_used
                         NEWLINE
                         fixed_header
                         field_list
-                        TAGGED_HEADER /*{$record_desc::recordType = "Tagged"; } */
+                        TAGGED_HEADER
                         YES
                         NEWLINE
-                        INT /* {
-                            $record_desc::theRecord.SetTagFieldCount(int($INT.getText()));
-                            $record_desc::theRecord.SetEndOfFixed();
-                        } */
+                        INT
                         NEWLINE
                         tag_list
                         ;
 
 union_record :  UNION_RECORD
-                NEWLINE /*{
-                    $record_desc::theRecord = PY_Record_Field.CUnionRecord();
-                    $record_desc::recordType = "Union";
-                } */
+                NEWLINE
                 union_header
                 ;
 
 
-fixed_header :  a=length_data_type /* {
-                    $record_desc::lengthDataType = $a.text;
-                    $record_desc::theRecord.SetStartEndLenType($a.text);
-                } */
+fixed_header :  length_data_type
                 COMMA
                 field_table_delim
                 NEWLINE
-                buffer_length /* {$record_desc::theRecord.SetBufferLength($buffer_length.text); } */
+                buffer_length
                 NEWLINE
                 ;
 
@@ -124,24 +70,18 @@ variable_header :   variable_record_delim ;
 
 union_header :  variable_record_delim ;
 
-field_names_used :  YES /*{ $record_desc::useFieldNames = True ;} */
-                    | NO /* { $record_desc::useFieldNames = False ;} */
+field_names_used :  YES
+                    | NO
                     ;
 
-length_data_type :  STARTEND /* {
-                        $record_desc::needStart = True;
-                        $record_desc::needEnd = True;
-                    } */
-                    | STARTLEN /* {
-                        $record_desc::needStart = True;
-                        $record_desc::needLength = True;
-                    } */
-                    | LENONLY /* {$record_desc::needStart = True; } */
+length_data_type :  STARTEND
+                    | STARTLEN
+                    | LENONLY
                     ;
 
 buffer_length : INT ;
 
-field_list :    field_entry[/*($record_desc::needLength or $record_desc::needEnd)*/]
+field_list :    field_entry
                 (
                     (field_type
                     | field_start_reset)
@@ -149,26 +89,12 @@ field_list :    field_entry[/*($record_desc::needLength or $record_desc::needEnd
                 )*
                 ;
 
-/* field_type :    (combo_field) => combo_field */
-/*                 | (synth_field) => synth_field */
-/*                 | (skip2delim_field) => skip2delim_field */
-/*                 | field_entry[($record_desc::needLength or $record_desc::needEnd)] */
-/*                 ; */
-                
 field_type :    combo_field
                 | synth_field
                 | skip2delim_field
-                | field_entry[/*($record_desc::needLength or $record_desc::needEnd)*/]
+                | field_entry
                 ;
                 
-/* tag_list :  NEWLINE* tag_field */
-/*                 ((combo_field) => combo_field */
-/*                 | (synth_field) => synth_field */
-/*                 | (skip2delim_field) => skip2delim_field */
-/*                 | tag_field */
-/*                 | NEWLINE)* */
-/*                 ; */
-
 tag_list :  NEWLINE* tag_field
                 (combo_field
                 | synth_field
@@ -177,37 +103,15 @@ tag_list :  NEWLINE* tag_field
                 | NEWLINE)*
                 ;
 
-field_start_reset : ORG_HEADER (a=FIELD_NAME | b=INT) NEWLINE /* {
-                        $record_desc::theRecord.ResetNextFieldOffset(field_name=(a.getText() if a else None), field_number=(b.getText() if b else None));
-                    } */
+field_start_reset : ORG_HEADER
                     ;
 
-tag_field
-@init {
-    a = None;
-    f = None;
-}
-            /* :   ((field_modifier) => field_modifier) ? { */
-            :   (field_modifier) ? {
-                    a=$field_modifier.f_modifier;
-                    f=$field_modifier.repeat_count;
-                }
-                b=FIELD_NAME
-                NEWLINE /* {
-                    new_field = eval("PY_Record_Field.C\%s\%sField(repeat_count=f, field_name=$b.text)" \
-                        \% ((a if a else ""), $record_desc::recordType));
-                    $record_desc::theRecord.AddTagField(new_field);
-                } */
+tag_field :   (field_modifier) ? 
+                FIELD_NAME
+                NEWLINE
                 ;
             
-combo_field
-/* scope { */
-/*     line_number */
-/* } */
-/* @after { */
-/*     print "Skipping Combo Field at line \%i" \% $combo_field::line_number ; */
-/* } */
-            :   COMBO /* {$combo_field::line_number = $COMBO.getLine(); } */
+combo_field :   COMBO
                 field_def_delim_char
                 FIELD_NAME
                 field_def_delim_char
@@ -219,14 +123,7 @@ combo_field
                 NEWLINE
                 ;
                 
-synth_field
-/* scope { */
-/*     line_number */
-/* } */
-/* @after { */
-/*     print "Skipping SYNTH Field at line \%i" \% $synth_field::line_number ; */
-/* } */
-            :   SYNTH /* {$synth_field::line_number = $SYNTH.getLine(); } */
+synth_field :   SYNTH
                 field_def_delim_char
                 FIELD_NAME
                 field_def_delim_char
@@ -241,57 +138,20 @@ synth_field
 skip2delim_field
                :   SKIP2DELIM 
                    field_def_delim_char
-                   a=FIELD_NAME
+                   FIELD_NAME
                    field_def_delim_char
                    (NAME | NUMBER)
                    field_def_delim_char
-                   c=field_separator_char
+                   field_separator_char
                    field_def_delim_char
-                   b=FIELD_NAME
-	               NEWLINE /* {
-	                    new_field = eval("PY_Record_Field.CSkip2DelimField(field_name=$a.text, base_field_name=$b.text, delim_char=$c.text)");
-	                    $record_desc::theRecord.AddDerivedField(new_field, $b.text);
-	                } */
+                   FIELD_NAME
+	               NEWLINE
                    ;
 
-field_entry[needs_len_or_end]
-/* scope { */
-/*     needsLenOrEnd; */
-/* } */
-/* @init { */
-/*     a = None; */
-/*     f = None; */
-/*     $field_entry::needsLenOrEnd = needs_len_or_end; */
-/* } */
-            /* :   ((field_modifier) => field_modifier) ? { */
-            :   (field_modifier) ? /* {
-                    a=$field_modifier.f_modifier;
-                    f=$field_modifier.repeat_count;
-                } */
-                b=FIELD_NAME field_def_delim_char
-                c=INT
-//                {$field_entry::needsLenOrEnd}?=> (field_def_delim_char d=INT NEWLINE) | NEWLINE
-                ((field_def_delim_char d=INT NEWLINE)
-                | NEWLINE)
-                /* {
-                    t1 = ""
-                    t2 = ""
-                    if $record_desc::lengthDataType == "Start_End":
-                        t1 = "field_start=int(c.getText())"
-                        t2 = "field_end=int(d.getText())"
-                    elif $record_desc::lengthDataType == "Start_Len":
-                        t1 = "field_start=int(c.getText())"
-                        t2 = "field_length=int(d.getText())"
-                    else:
-                        #   we need some help from the Record object
-                        start_pos = $record_desc::theRecord.GetNextFieldOffset();
-                        t1 = "field_start=\%s" \% start_pos;
-                        t2 = "field_length=int(c.getText())"
-                        
-                    new_field = eval("PY_Record_Field.C\%s\%sField(postype=$record_desc::lengthDataType, repeat_count=f, field_name=$b.text, \%s, \%s)" \
-                        \% ((a if a else ""), $record_desc::recordType, t1, t2 ));
-                    $record_desc::theRecord.AddField(new_field);
-                } */
+field_entry :   (field_modifier) ?
+                FIELD_NAME field_def_delim_char
+                INT
+                ((field_def_delim_char INT NEWLINE) | NEWLINE)
                 ;
                 
 empty_entry :   NEWLINE ;
@@ -300,25 +160,11 @@ field_name_list :   FIELD_NAME
                     (COMMA SPACE? FIELD_NAME)*
                     ;
                 
-field_modifier
-returns [f_modifier, repeat_count] 
-                        :
-                        (LEADING_BLANKS {
-                            $f_modifier = $LEADING_BLANKS.getText();
-                            $repeat_count = -1;
-                        }
-                        | repeating_field {
-                            $f_modifier = $repeating_field.repeat_label;
-                            $repeat_count = $repeating_field.repeat_count;
-                        }
-                        )
-                        field_def_delim_char
-                        ;
+field_modifier :    (LEADING_BLANKS | repeating_field)
+                    field_def_delim_char
+                    ;
                         
-repeating_field
-returns [repeat_label, repeat_count]
-                        : INT {$repeat_count = int($INT.getText());}
-                        REPEATING_FIELD {$repeat_label = $REPEATING_FIELD.getText(); }
+repeating_field : INT REPEATING_FIELD
                         ;
                         
 field_separator_char :  COMMA_WORD
@@ -329,8 +175,8 @@ field_separator_char :  COMMA_WORD
                         ;
                         
 field_def_delim_char :  COMMA
-                    | TAB
-                    ;
+                        | TAB
+                        ;
                     
 field_table_delim : COMMA_WORD
                     | TAB_WORD
@@ -353,7 +199,7 @@ DASH : '-';
 LINE_COMMENT    :  '//'
                     ~('\n'|'\r')*
                     NEWLINE
-                    {channel=HIDDEN_CHANNEL;}
+                    -> channel(HIDDEN)
                     ;
 
 NEWLINE         :   '\r'?
