@@ -104,6 +104,8 @@ tag_list :  NEWLINE* tag_field
                 ;
 
 field_start_reset : ORG_HEADER
+                    (FIELD_NAME | INT)
+                    NEWLINE
                     ;
 
 tag_field :   (field_modifier) ? 
@@ -157,7 +159,7 @@ field_entry :   (field_modifier) ?
 empty_entry :   NEWLINE ;
 
 field_name_list :   FIELD_NAME
-                    (COMMA SPACE? FIELD_NAME)*
+                    (COMMA FIELD_NAME)*
                     ;
                 
 field_modifier :    (LEADING_BLANKS | repeating_field)
@@ -169,7 +171,7 @@ repeating_field : INT REPEATING_FIELD
                         
 field_separator_char :  COMMA_WORD
                         | SPACE_WORD
-                        /* | '\|' */
+                        | '|'
                         | ':'
                         | '-'
                         ;
@@ -192,7 +194,7 @@ variable_record_delim : TAB_WORD
  
 COMMA : ',' ;
 TAB :   '\t';
-SPACE : ' ';
+SPACE : ' ' -> channel(HIDDEN) ;
 COLON : ':';
 DASH : '-';
 
