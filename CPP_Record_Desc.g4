@@ -17,10 +17,12 @@ grammar CPP_Record_Desc ;
  * PARSER RULES
  *------------------------------------------------------------------*/
 
-record_desc :   (fixed_record
+record_desc :   NEWLINE*
+                (fixed_record
                 | variable_record
                 | fixed_tagged_record
-                | union_record)
+                | union_record
+                | quoted_record)
                 EOF
                 ;
 
@@ -56,19 +58,36 @@ union_record :  UNION_RECORD
                 union_header
                 ;
 
+quoted_record :  QUOTED_RECORD
+                NEWLINE
+                quoted_header
+                (FIELD_NAME NEWLINE)+
+                NEWLINE*
+                END
+                NEWLINE*
+                (synth_field | combo_field)*
+                ;
+
 
 fixed_header :  length_data_type
                 COMMA
                 field_table_delim
                 NEWLINE
                 buffer_length
-                NEWLINE
+                NEWLINE+
                 ;
 
 variable_header :   variable_record_delim ;
 
 
 union_header :  variable_record_delim ;
+
+quoted_header : field_names_used
+                NEWLINE
+                field_separator_char COMMA quote_char NEWLINE
+                INT
+                NEWLINE
+                ;
 
 field_names_used :  YES
                     | NO
@@ -127,7 +146,7 @@ combo_field :   COMBO
                 
 synth_field :   SYNTH
                 field_def_delim_char
-                FIELD_NAME
+                '_'* FIELD_NAME
                 field_def_delim_char
                 (NAME | NUMBER)
                 field_def_delim_char
@@ -183,6 +202,10 @@ field_def_delim_char :  COMMA
 field_table_delim : COMMA_WORD
                     | TAB_WORD
                     ;
+
+quote_char :    '"'
+                | '\''
+                ;
                     
 variable_record_delim : TAB_WORD
                         | COMMA_WORD
@@ -193,9 +216,13 @@ variable_record_delim : TAB_WORD
  *------------------------------------------------------------------*/
  
 COMMA : ',' ;
+
 TAB :   '\t';
+
 SPACE : ' ' -> channel(HIDDEN) ;
+
 COLON : ':';
+
 DASH : '-';
 
 LINE_COMMENT    :  '//'
@@ -213,6 +240,8 @@ FIXED_RECORD    :   'Fixed' ;
 VARIABLE_RECORD :   'Variable' ;
 
 FIXED_TAGGED_RECORD :   'FixedTagged' ;
+
+QUOTED_RECORD   :   'Quoted' ;
 
 UNION_RECORD    :   'Union' ;
 
@@ -233,6 +262,8 @@ LENONLY         :   'Len';
 YES             :   'Yes';
 
 NO              :    'No';
+
+END             :   'END';
 
 INT             :   ('0'..'9')+ ;
 
