@@ -28,8 +28,6 @@ record_desc :   NEWLINE*
 
 fixed_record :  FIXED_RECORD
                 NEWLINE 
-                field_names_used
-                NEWLINE
                 fixed_header
                 field_list
                 ;
@@ -37,11 +35,13 @@ fixed_record :  FIXED_RECORD
 variable_record :   VARIABLE_RECORD
                     NEWLINE
                     variable_header
+                    NEWLINE*
+                    (FIELD_NAME NEWLINE)+
+                    NEWLINE*
+                    (synth_field NEWLINE* | combo_field NEWLINE* | skip2delim_field NEWLINE*)*
                     ;
                     
 fixed_tagged_record :   FIXED_TAGGED_RECORD
-                        NEWLINE
-                        field_names_used
                         NEWLINE
                         fixed_header
                         field_list
@@ -61,15 +61,18 @@ union_record :  UNION_RECORD
 quoted_record :  QUOTED_RECORD
                 NEWLINE
                 quoted_header
+                NEWLINE*
                 (FIELD_NAME NEWLINE)+
                 NEWLINE*
                 END
                 NEWLINE*
-                (synth_field | combo_field)*
+                (synth_field NEWLINE* | combo_field NEWLINE*)*
                 ;
 
 
-fixed_header :  length_data_type
+fixed_header :  field_names_used
+                NEWLINE
+                length_data_type
                 COMMA
                 field_table_delim
                 NEWLINE
@@ -77,14 +80,20 @@ fixed_header :  length_data_type
                 NEWLINE+
                 ;
 
-variable_header :   variable_record_delim ;
+variable_header : field_names_used
+                NEWLINE
+                variable_record_delim
+                NEWLINE
+                INT
+                NEWLINE
+                ;
 
 
 union_header :  variable_record_delim ;
 
 quoted_header : field_names_used
                 NEWLINE
-                field_separator_char COMMA quote_char NEWLINE
+                variable_record_delim COMMA quote_char NEWLINE
                 INT
                 NEWLINE
                 ;
@@ -100,18 +109,26 @@ length_data_type :  STARTEND
 
 buffer_length : INT ;
 
-field_list :    field_entry
-                (
-                    (field_type
-                    | field_start_reset)
-                    | NEWLINE
-                )*
-                ;
-
-field_type :    combo_field
+/* field_list :    field_entry */
+/*                 ( */
+/*                     (field_type */
+/*                     | field_start_reset) */
+/*                     | NEWLINE */
+/*                 )* */
+/*                 ; */
+/**/
+/* field_type :    combo_field */
+/*                 | synth_field */
+/*                 | skip2delim_field */
+/*                 | field_entry */
+/*                 ; */
+                
+field_list :    (combo_field
                 | synth_field
                 | skip2delim_field
                 | field_entry
+                | field_start_reset
+                | NEWLINE)+
                 ;
                 
 tag_list :  NEWLINE* tag_field
@@ -190,9 +207,12 @@ repeating_field : INT REPEATING_FIELD
                         
 field_separator_char :  COMMA_WORD
                         | SPACE_WORD
+                        | TAB_WORD
                         | '|'
                         | ':'
                         | '-'
+                        | '~'
+                        | '/'
                         ;
                         
 field_def_delim_char :  COMMA
@@ -209,7 +229,14 @@ quote_char :    '"'
                     
 variable_record_delim : TAB_WORD
                         | COMMA_WORD
+                        | '|'
+                        | ';'
                         ;
+                        
+/* quoted_record_delim :   TAB_WORD */
+/*                         | COMMA_WORD */
+/*                         | '|' */
+/*                         ; */
                         
 /*------------------------------------------------------------------
  * LEXER RULES
@@ -271,11 +298,11 @@ LEADING_BLANKS  :   'LB';
 
 REPEATING_FIELD :   'RP';
 
-NAME            :   'Name';
+NAME            :   'NAME';
 
-NUMBER          :   'Number';
+NUMBER          :   'NUMBER';
 
-COMBO           :   'Combo' ;
+COMBO           :   'COMBO' ;
 
 SYNTH           :   'SYNTH';
 
