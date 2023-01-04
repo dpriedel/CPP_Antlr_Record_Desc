@@ -1,28 +1,22 @@
 /*
-
-    multiple Python statements in actions need to be on separate lines
-    otherwise, they run together in the generated code and cause
-    Python syntax errors which show up when the module is executed.
+    NOTE: Empty lines are NOT allowed in record description files
+    because I can't find a good way to handle them in Antlr4.
+    So...use comment lines (//) instead.
     
 */
 
  
 grammar CPP_Record_Desc ;
 
-/* options { */
-/*     language=Cpp; */
-/* } */
-
 /*------------------------------------------------------------------
  * PARSER RULES
  *------------------------------------------------------------------*/
 
-record_desc :   NEWLINE*
-                (fixed_record
+record_desc :   (fixed_record
                 | variable_record
                 | fixed_tagged_record
-                | union_record
-                | quoted_record)
+                | quoted_record
+                | union_record)
                 EOF
                 ;
 
@@ -35,10 +29,8 @@ fixed_record :  FIXED_RECORD
 variable_record :   VARIABLE_RECORD
                     NEWLINE
                     variable_header
-                    NEWLINE*
                     (FIELD_NAME NEWLINE)+
-                    NEWLINE*
-                    (synth_field NEWLINE* | combo_field NEWLINE* | skip2delim_field NEWLINE*)*
+                    (synth_field | combo_field | skip2delim_field)*
                     ;
                     
 fixed_tagged_record :   FIXED_TAGGED_RECORD
@@ -61,12 +53,10 @@ union_record :  UNION_RECORD
 quoted_record :  QUOTED_RECORD
                 NEWLINE
                 quoted_header
-                NEWLINE*
                 (FIELD_NAME NEWLINE)+
-                NEWLINE*
                 END
-                NEWLINE*
-                (synth_field NEWLINE* | combo_field NEWLINE*)*
+                NEWLINE
+                (synth_field | combo_field)*
                 ;
 
 
@@ -77,7 +67,7 @@ fixed_header :  field_names_used
                 field_table_delim
                 NEWLINE
                 buffer_length
-                NEWLINE+
+                NEWLINE
                 ;
 
 variable_header : field_names_used
@@ -109,20 +99,6 @@ length_data_type :  STARTEND
 
 buffer_length : INT ;
 
-/* field_list :    field_entry */
-/*                 ( */
-/*                     (field_type */
-/*                     | field_start_reset) */
-/*                     | NEWLINE */
-/*                 )* */
-/*                 ; */
-/**/
-/* field_type :    combo_field */
-/*                 | synth_field */
-/*                 | skip2delim_field */
-/*                 | field_entry */
-/*                 ; */
-                
 field_list :    (combo_field
                 | synth_field
                 | skip2delim_field
@@ -131,12 +107,11 @@ field_list :    (combo_field
                 | NEWLINE)+
                 ;
                 
-tag_list :  NEWLINE* tag_field
-                (combo_field
+tag_list :      (tag_field
+                | combo_field
                 | synth_field
                 | skip2delim_field
-                | tag_field
-                | NEWLINE)*
+                | NEWLINE)+
                 ;
 
 field_start_reset : ORG_HEADER
@@ -153,7 +128,7 @@ combo_field :   COMBO
                 field_def_delim_char
                 FIELD_NAME
                 field_def_delim_char
-                (NAME | NUMBER)
+                (NAME_WORD | NUMBER_WORD)
                 field_def_delim_char
                 (field_separator_char)?
                 field_def_delim_char
@@ -165,7 +140,7 @@ synth_field :   SYNTH
                 field_def_delim_char
                 '_'* FIELD_NAME
                 field_def_delim_char
-                (NAME | NUMBER)
+                (NAME_WORD | NUMBER_WORD)
                 field_def_delim_char
                 field_separator_char
                 field_def_delim_char
@@ -178,7 +153,7 @@ skip2delim_field
                    field_def_delim_char
                    FIELD_NAME
                    field_def_delim_char
-                   (NAME | NUMBER)
+                   (NAME_WORD | NUMBER_WORD)
                    field_def_delim_char
                    field_separator_char
                    field_def_delim_char
@@ -186,10 +161,12 @@ skip2delim_field
 	               NEWLINE
                    ;
 
-field_entry :   (field_modifier) ?
-                FIELD_NAME field_def_delim_char
+field_entry :   (field_modifier)?
+                FIELD_NAME
+                field_def_delim_char
                 INT
-                ((field_def_delim_char INT NEWLINE) | NEWLINE)
+                (field_def_delim_char INT)?
+                NEWLINE
                 ;
                 
 empty_entry :   NEWLINE ;
@@ -298,15 +275,15 @@ LEADING_BLANKS  :   'LB';
 
 REPEATING_FIELD :   'RP';
 
-NAME            :   'NAME';
+NAME_WORD       :   'FLD_NAME';
 
-NUMBER          :   'NUMBER';
+NUMBER_WORD     :   'FLD_NUMBER';
 
 COMBO           :   'COMBO' ;
 
 SYNTH           :   'SYNTH';
 
-SKIP2DELIM      :   'Skip2Delim' ;
+SKIP2DELIM      :   'SKIP2DELIM' ;
 
 FIELD_NAME      :   ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '-')* ;
 
