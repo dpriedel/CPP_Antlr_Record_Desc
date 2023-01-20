@@ -38,6 +38,7 @@ fixed_tagged_record :   FIXED_TAGGED_RECORD
                         fixed_header
                         field_list
                         TAGGED_HEADER
+                        /* field names are required */
                         YES
                         NEWLINE
                         INT
