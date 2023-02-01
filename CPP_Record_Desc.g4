@@ -12,11 +12,11 @@ grammar CPP_Record_Desc ;
  * PARSER RULES
  *------------------------------------------------------------------*/
 
-record_desc :   (fixed_record
+record_desc :   fixed_record
                 | variable_record
                 | fixed_tagged_record
                 | quoted_record
-                | union_record)
+                | union_record
                 EOF
                 ;
 
@@ -139,7 +139,7 @@ combo_field :   COMBO
                 
 synth_field :   SYNTH
                 field_def_delim_char
-                '_'* FIELD_NAME
+                synth_field_name
                 field_def_delim_char
                 (NAME_WORD | NUMBER_WORD)
                 field_def_delim_char
@@ -148,6 +148,11 @@ synth_field :   SYNTH
                 field_name_list
                 NEWLINE
                 ;
+
+// synth field name can have leading underscore(s)
+
+synth_field_name : '_'* FIELD_NAME
+                    ;
 
 skip2delim_field
                :   SKIP2DELIM 
@@ -165,17 +170,20 @@ skip2delim_field
 field_entry :   (field_modifier)?
                 FIELD_NAME
                 field_def_delim_char
-                INT
-                (field_def_delim_char INT)?
+                a=INT
+                (field_def_delim_char b=INT)?
                 NEWLINE
                 ;
                 
 empty_entry :   NEWLINE ;
 
-field_name_list :   FIELD_NAME
-                    (COMMA FIELD_NAME)*
+field_name_list :   list_field_name
+                    (COMMA list_field_name)*
                     ;
                 
+list_field_name :   FIELD_NAME
+                    ;
+
 field_modifier :    (LEADING_BLANKS | repeating_field)
                     field_def_delim_char
                     ;
