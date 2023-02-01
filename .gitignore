@@ -5,3 +5,10 @@ WellPoint*
 BCBS_MN*
 Nasco*
 test_record_desc_files*
+control_files*
+
+# skip outputs of Antlr
+*.cpp
+*.h
+*.interp
+*.tokens
