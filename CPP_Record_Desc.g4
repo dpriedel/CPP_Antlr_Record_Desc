@@ -29,7 +29,7 @@ fixed_record :  FIXED_RECORD
 variable_record :   VARIABLE_RECORD
                     NEWLINE
                     variable_header
-                    (FIELD_NAME NEWLINE)+
+                    variable_field_name_list  
                     (synth_field | combo_field | skip2delim_field)*
                     ;
                     
@@ -75,7 +75,9 @@ variable_header : field_names_used
                 NEWLINE
                 variable_record_delim
                 NEWLINE
-                INT
+// INT value is count of actual fields in record
+// excluding Virtual fields
+                a=INT
                 NEWLINE
                 ;
 
@@ -88,6 +90,12 @@ quoted_header : field_names_used
                 INT
                 NEWLINE
                 ;
+
+variable_field_name_list :   (variable_list_field_name NEWLINE)+
+                            ;
+                
+variable_list_field_name :  FIELD_NAME
+                            ;
 
 field_names_used :  YES
                     | NO
@@ -133,7 +141,7 @@ combo_field :   COMBO
                 field_def_delim_char
                 (field_separator_char)?
                 field_def_delim_char
-                field_name_list
+                virtual_field_name_list
                 NEWLINE
                 ;
                 
@@ -145,7 +153,7 @@ synth_field :   SYNTH
                 field_def_delim_char
                 field_separator_char
                 field_def_delim_char
-                field_name_list
+                virtual_field_name_list
                 NEWLINE
                 ;
 
@@ -177,11 +185,11 @@ field_entry :   (field_modifier)?
                 
 empty_entry :   NEWLINE ;
 
-field_name_list :   list_field_name
-                    (COMMA list_field_name)*
-                    ;
+virtual_field_name_list :   virtual_list_field_name
+                            (COMMA virtual_list_field_name)*
+                            ;
                 
-list_field_name :   FIELD_NAME
+virtual_list_field_name :   FIELD_NAME
                     ;
 
 field_modifier :    (LEADING_BLANKS | repeating_field)
