@@ -24,13 +24,14 @@ fixed_record :  FIXED_RECORD
                 NEWLINE 
                 fixed_header
                 fixed_field_list
-                virtual_field_list
                 ;
 
 variable_record :   VARIABLE_RECORD
                     NEWLINE
                     variable_header
                     variable_field_name_list  
+                    END
+                    NEWLINE
                     virtual_field_list
                     ;
                     
@@ -57,8 +58,8 @@ quoted_record :  QUOTED_RECORD
                 NEWLINE
                 quoted_header
                 variable_field_name_list  
-                /* END */
-                /* NEWLINE */
+                END
+                NEWLINE
                 virtual_field_list
                 ;
 
@@ -93,7 +94,9 @@ quoted_header : field_names_used
                 NEWLINE
                 ;
 
-fixed_field_list :    fixed_field_entry+
+fixed_field_list :    (fixed_field_entry
+                | field_start_reset
+                | virtual_field_entry)+
                 ;
                 
 fixed_field_entry :   (field_modifier)?
@@ -104,17 +107,26 @@ fixed_field_entry :   (field_modifier)?
                 NEWLINE
                 ;
                 
-variable_field_name_list :   variable_list_field_name*
+field_start_reset : ORG_HEADER
+                    (FIELD_NAME | INT)
+                    NEWLINE
+                    ;
+
+variable_field_name_list :   (variable_list_field_name
+                            | virtual_field_entry)*
                             ;
                 
-variable_list_field_name :  FIELD_NAME
+variable_list_field_name :  (field_modifier) ?
+                            FIELD_NAME
                             NEWLINE
                             ;
 
-virtual_field_list :    (combo_field
+virtual_field_list :    virtual_field_entry*
+                ;
+                
+virtual_field_entry :    combo_field
                 | synth_field
                 | skip2delim_field
-                | NEWLINE)*
                 ;
                 
 tag_list :      (tag_field | NEWLINE)+
@@ -136,11 +148,6 @@ length_data_type :  STARTEND
                     ;
 
 buffer_length : INT ;
-
-field_start_reset : ORG_HEADER
-                    (FIELD_NAME | INT)
-                    NEWLINE
-                    ;
 
 combo_field :   COMBO
                 field_def_delim_char
