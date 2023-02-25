@@ -23,20 +23,21 @@ record_desc :   fixed_record
 fixed_record :  FIXED_RECORD
                 NEWLINE 
                 fixed_header
-                field_list
+                fixed_field_list
+                virtual_field_list
                 ;
 
 variable_record :   VARIABLE_RECORD
                     NEWLINE
                     variable_header
                     variable_field_name_list  
-                    (synth_field | combo_field | skip2delim_field)*
+                    virtual_field_list
                     ;
                     
 fixed_tagged_record :   FIXED_TAGGED_RECORD
                         NEWLINE
                         fixed_header
-                        field_list
+                        fixed_field_list
                         TAGGED_HEADER
                         /* field names are required */
                         YES
@@ -44,6 +45,7 @@ fixed_tagged_record :   FIXED_TAGGED_RECORD
                         INT
                         NEWLINE
                         tag_list
+                        virtual_field_list
                         ;
 
 union_record :  UNION_RECORD
@@ -57,7 +59,7 @@ quoted_record :  QUOTED_RECORD
                 variable_field_name_list  
                 /* END */
                 /* NEWLINE */
-                (synth_field | combo_field)*
+                virtual_field_list
                 ;
 
 
@@ -91,12 +93,38 @@ quoted_header : field_names_used
                 NEWLINE
                 ;
 
-variable_field_name_list :   (variable_list_field_name NEWLINE)*
+fixed_field_list :    fixed_field_entry+
+                ;
+                
+fixed_field_entry :   (field_modifier)?
+                FIELD_NAME
+                field_def_delim_char
+                a=INT
+                (field_def_delim_char b=INT)?
+                NEWLINE
+                ;
+                
+variable_field_name_list :   variable_list_field_name*
                             ;
                 
 variable_list_field_name :  FIELD_NAME
+                            NEWLINE
                             ;
 
+virtual_field_list :    (combo_field
+                | synth_field
+                | skip2delim_field
+                | NEWLINE)*
+                ;
+                
+tag_list :      (tag_field | NEWLINE)+
+                ;
+
+tag_field :   (field_modifier) ? 
+                FIELD_NAME
+                NEWLINE
+                ;
+            
 field_names_used :  YES
                     | NO
                     | USE_HEADER
@@ -109,31 +137,11 @@ length_data_type :  STARTEND
 
 buffer_length : INT ;
 
-field_list :    (combo_field
-                | synth_field
-                | skip2delim_field
-                | field_entry
-                | field_start_reset
-                | NEWLINE)+
-                ;
-                
-tag_list :      (tag_field
-                | combo_field
-                | synth_field
-                | skip2delim_field
-                | NEWLINE)+
-                ;
-
 field_start_reset : ORG_HEADER
                     (FIELD_NAME | INT)
                     NEWLINE
                     ;
 
-tag_field :   (field_modifier) ? 
-                FIELD_NAME
-                NEWLINE
-                ;
-            
 combo_field :   COMBO
                 field_def_delim_char
                 FIELD_NAME
@@ -173,17 +181,9 @@ skip2delim_field
                    field_separator_char
                    field_def_delim_char
                    FIELD_NAME
-	               NEWLINE
+                   NEWLINE
                    ;
 
-field_entry :   (field_modifier)?
-                FIELD_NAME
-                field_def_delim_char
-                a=INT
-                (field_def_delim_char b=INT)?
-                NEWLINE
-                ;
-                
 empty_entry :   NEWLINE ;
 
 virtual_field_name_list :   virtual_list_field_name
