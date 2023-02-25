@@ -54,9 +54,9 @@ union_record :  UNION_RECORD
 quoted_record :  QUOTED_RECORD
                 NEWLINE
                 quoted_header
-                (FIELD_NAME NEWLINE)+
-                END
-                NEWLINE
+                variable_field_name_list  
+                /* END */
+                /* NEWLINE */
                 (synth_field | combo_field)*
                 ;
 
@@ -91,7 +91,7 @@ quoted_header : field_names_used
                 NEWLINE
                 ;
 
-variable_field_name_list :   (variable_list_field_name NEWLINE)+
+variable_field_name_list :   (variable_list_field_name NEWLINE)*
                             ;
                 
 variable_list_field_name :  FIELD_NAME
@@ -99,6 +99,7 @@ variable_list_field_name :  FIELD_NAME
 
 field_names_used :  YES
                     | NO
+                    | USE_HEADER
                     ;
 
 length_data_type :  STARTEND
@@ -283,6 +284,8 @@ LENONLY         :   'Len';
 YES             :   'Yes';
 
 NO              :    'No';
+
+USE_HEADER      :   'Header';
 
 END             :   'END';
 
