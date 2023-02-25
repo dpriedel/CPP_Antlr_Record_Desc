@@ -96,7 +96,8 @@ quoted_header : field_names_used
 
 fixed_field_list :    (fixed_field_entry
                 | field_start_reset
-                | virtual_field_entry)+
+                | virtual_field_entry
+                | NEWLINE)+
                 ;
                 
 fixed_field_entry :   (field_modifier)?
