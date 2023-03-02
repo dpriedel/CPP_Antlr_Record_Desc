@@ -128,6 +128,7 @@ virtual_field_list :    virtual_field_entry*
 virtual_field_entry :    combo_field
                 | synth_field
                 | skip2delim_field
+                | array_field
                 ;
                 
 tag_list :      (tag_field | NEWLINE)+
@@ -174,6 +175,16 @@ synth_field :   SYNTH
                 NEWLINE
                 ;
 
+array_field :   ARRAY
+                field_def_delim_char
+                FIELD_NAME field_def_delim_char (a=INT) field_def_delim_char (b=INT)
+                field_def_delim_char
+                (NAME_WORD | NUMBER_WORD)
+                field_def_delim_char
+                (virtual_list_field_name | d=INT)
+                NEWLINE
+                ;
+                
 // synth field name can have leading underscore(s)
 
 synth_field_name : '_'* FIELD_NAME
@@ -201,7 +212,11 @@ virtual_field_name_list :   virtual_list_field_name
 virtual_list_field_name :   FIELD_NAME
                     ;
 
-field_modifier :    (LEADING_BLANKS | repeating_field)
+field_modifier :    (TRIM_LEFT
+                    | TRIM_RIGHT
+                    | TRIM_BOTH
+                    | NO_TRIM
+                    | repeating_field)
                     field_def_delim_char
                     ;
                         
@@ -301,6 +316,14 @@ INT             :   ('0'..'9')+ ;
 
 LEADING_BLANKS  :   'LB';
 
+TRIM_LEFT       :   'TL' ;
+
+TRIM_RIGHT      :   'TR' ;
+
+TRIM_BOTH       :   'TB' ;
+
+NO_TRIM         :   'NT' ;
+
 REPEATING_FIELD :   'RP';
 
 NAME_WORD       :   'FLD_NAME';
@@ -312,6 +335,8 @@ COMBO           :   'COMBO' ;
 SYNTH           :   'SYNTH';
 
 SKIP2DELIM      :   'SKIP2DELIM' ;
+
+ARRAY           :   'ARRAY' ;
 
 FIELD_NAME      :   ('a'..'z' | 'A'..'Z') ('a'..'z' | 'A'..'Z' | '0'..'9' | '_' | '-')* ;
 
