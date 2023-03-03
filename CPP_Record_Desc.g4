@@ -3,6 +3,12 @@
     because I can't find a good way to handle them in Antlr4.
     So...use comment lines (//) instead.
     
+    NOTE: there are some extra parser rules that are not actually needed to 
+    process the Record_Desc files, such as those related to field name and
+    field name list processing.  These extra entries help with the Visitor
+    code when working with the parsed data by providing some extra context
+    which does not then have to be computed in the Visitor routines.
+
 */
 
  
@@ -100,7 +106,7 @@ fixed_field_list :    (fixed_field_entry
                 | NEWLINE)+
                 ;
                 
-fixed_field_entry :   (field_modifier)?
+fixed_field_entry :   field_modifier?
                 FIELD_NAME
                 field_def_delim_char
                 a=INT
@@ -117,7 +123,7 @@ variable_field_name_list :   (variable_list_field_name
                             | virtual_field_entry)*
                             ;
                 
-variable_list_field_name :  (field_modifier) ?
+variable_list_field_name :  field_modifier ?
                             FIELD_NAME
                             NEWLINE
                             ;
@@ -134,7 +140,7 @@ virtual_field_entry :    combo_field
 tag_list :      (tag_field | NEWLINE)+
                 ;
 
-tag_field :   (field_modifier) ? 
+tag_field :   field_modifier ? 
                 FIELD_NAME
                 NEWLINE
                 ;
