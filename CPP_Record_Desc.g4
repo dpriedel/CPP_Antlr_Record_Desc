@@ -183,7 +183,7 @@ synth_field :   SYNTH
 
 array_field :   ARRAY
                 field_def_delim_char
-                FIELD_NAME field_def_delim_char (a=INT) field_def_delim_char (b=INT)
+                FIELD_NAME field_def_delim_char (a=array_field_width) field_def_delim_char (b=array_field_count)
                 field_def_delim_char
                 (NAME_WORD | NUMBER_WORD)
                 field_def_delim_char
@@ -191,6 +191,10 @@ array_field :   ARRAY
                 NEWLINE
                 ;
                 
+array_field_width : INT ;
+
+array_field_count : INT ;
+
 // synth field name can have leading underscore(s)
 
 synth_field_name : '_'* FIELD_NAME
